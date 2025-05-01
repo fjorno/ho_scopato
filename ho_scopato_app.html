@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scopa - Sicilian Card Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2e7d32;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #ffd700;
+            margin-bottom: 30px;
+        }
+
+        .player-selection {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .player-selection select {
+            padding: 8px;
+            margin: 0 10px;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #ffd700;
+            color: #2e7d32;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background-color: #ffeb3b;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .player-area {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .current-player {
+            border: 3px solid #ffd700;
+        }
+
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .card {
+            width: 80px;
+            height: 120px;
+            background-color: white;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: black;
+            font-weight: bold;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .card.selectable:hover {
+            transform: translateY(-10px);
+        }
+
+        .card.selected {
+            box-shadow: 0 0 0 3px #ffd700;
+        }
+
+        .card.cups { color: #d32f2f; }
+        .card.coins { color: #ffa000; }
+        .card.swords { color: #1976d2; }
+        .card.clubs { color: #388e3c; }
+
+        .card-suit {
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        .card.face-down {
+            background-color: #5d4037;
+            color: #5d4037;
+        }
+
+        .board-area {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: rgba(0, 77, 38, 0.7);
+            border-radius: 8px;
+        }
+
+        .status-message {
+            margin: 15px 0;
+            font-size: 20px;
+            color: #ffd700;
+            min-height: 30px;
+        }
+
+        .score-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            flex-wrap: wrap;
+        }
+
+        .score-box {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 5px;
+        }
+
+        .captured-cards {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #aaa;
+        }
+
+        .scopa-indicator {
+            color: #ffd700;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .game-over {
+            font-size: 24px;
+            color: #ffd700;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .how-to-play {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .how-to-play h3 {
+            color: #ffd700;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                width: 60px;
+                height: 90px;
+                font-size: 18px;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+
+        #pass-device-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+        }
+
+        #start-turn-btn {
+            background-color: #ffd700;
+            color: #2e7d32;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        #start-turn-btn:hover {
+            background-color: #ffeb3b;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Scopa - Sicilian Card Game</h1>
+
+        <div class="player-selection" id="player-selection">
+            <label for="player-count">Number of Players: </label>
+            <select id="player-count">
+                <option value="2">2 Players</option>
+                <option value="3">3 Players</option>
+                <option value="4">4 Players</option>
+                <option value="5">5 Players</option>
+                <option value="6">6 Players</option>
+            </select>
+            <button id="show-name-inputs-btn">Next</button>
+            <div id="player-names-container" style="display: none; margin-top: 15px;">
+                <!-- Player name inputs will be added here dynamically -->
+                <div id="player-names-inputs"></div>
+                <button id="start-game-btn" style="margin-top: 15px;">Start Game</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="new-game-btn">New Game</button>
+            <button id="end-turn-btn" disabled>End Turn</button>
+            <button id="rules-btn">Show Rules</button>
+        </div>
+
+        <div class="status-message" id="status-message"></div>
+
+        <div class="score-container" id="score-container">
+            <!-- Score elements will be added dynamically -->
+        </div>
+
+        <div id="all-player-areas">
+            <!-- Player areas will be added dynamically -->
+        </div>
+
+        <div class="board-area">
+            <h2>Table</h2>
+            <div class="cards-container" id="table-cards">
+                <!-- Table cards will be inserted here -->
+            </div>
+        </div>
+
+        <div class="how-to-play" id="rules-section" style="display: none;">
+            <h3>How to Play Scopa</h3>
+            <p><strong>Objective:</strong> Capture cards from the table to earn points.</p>
+            <p><strong>Setup:</strong> Each player gets 3 cards, and 4 cards are placed on the table.</p>
+            <p><strong>Turn:</strong> On your turn, you must play one card from your hand:</p>
+            <ul>
+                <li>If your card matches a card on the table, you capture it.</li>
+                <li>If your card's value matches the sum of several cards, you can capture them all.</li>
+                <li>If you can't capture any cards, you must place your card on the table.</li>
+                <li>If you clear all cards from the table, you score a "scopa" (sweep).</li>
+            </ul>
+            <p><strong>Scoring:</strong> At the end of the game, points are awarded for:</p>
+            <ul>
+                <li>Most cards captured: 1 point</li>
+                <li>Most coins captured: 1 point</li>
+                <li>Sette bello (7 of coins): 1 point</li>
+                <li>Most "prime" points: 1 point</li>
+                <li>Each scopa: 1 point</li>
+            </ul>
+            <p><strong>First to 11 points wins!</strong></p>
+        </div>
+    </div>
+
+    <script>
+        // This script should replace the entire <script> section in your HTML file
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get references to key UI elements
+            const newGameBtn = document.getElementById('new-game-btn');
+            const endTurnBtn = document.getElementById('end-turn-btn');
+            const rulesBtn = document.getElementById('rules-btn');
+            const statusMessage = document.getElementById('status-message');
+            const rulesSection = document.getElementById('rules-section');
+            const tableCards = document.getElementById('table-cards');
+            
+            // Replace the score container
+            const scoreContainerHTML = `
+                <div class="score-container" id="score-container">
+                    <!-- Score elements will be added dynamically -->
+                </div>
+            `;
+            
+            if (document.querySelector('.score-container')) {
+                document.querySelector('.score-container').outerHTML = scoreContainerHTML;
+            }
+            
+            // Create a container for all player areas
+            const allPlayerAreasHTML = `
+                <div id="all-player-areas">
+                    <!-- Player areas will be added dynamically -->
+                </div>
+            `;
+            
+            // Add the container before the board area
+            const boardArea = document.querySelector('.board-area');
+            boardArea.parentNode.insertBefore(document.createElement('div'), boardArea).outerHTML = allPlayerAreasHTML;
+            
+            // Move the board area inside our container if it exists
+            const allPlayerAreas = document.getElementById('all-player-areas');
+            if (allPlayerAreas && boardArea) {
+                allPlayerAreas.appendChild(boardArea);
+            }
+            
+            // Game state object
+            const game = {
+                playerCount: 2,
+                players: [],
+                deck: [],
+                table: [],
+                currentPlayer: 0,
+                selectedHandCard: null,
+                selectedTableCards: [],
+                scores: [],
+                gameEnded: false
+            };
+            
+            // Initialize the game with player selection
+            function initialize() {
+                // Hide the game elements initially
+                document.querySelector('.controls').style.display = 'none';
+                
+                // Make sure board area exists but is hidden
+                ensureBoardAreaExists();
+                document.querySelector('.board-area').style.display = 'none';
+                
+                document.getElementById('status-message').style.display = 'none';
+                document.getElementById('score-container').style.display = 'none';
+                
+                // Show only player selection
+                document.getElementById('player-selection').style.display = 'block';
+                
+                // Add event listener to "Next" button to show name inputs
+                document.getElementById('show-name-inputs-btn').addEventListener('click', showPlayerNameInputs);
+                
+                // Add event listener to start button
+                document.getElementById('start-game-btn').addEventListener('click', startGame);
+            }
+            
+            // Add this new function to create and show name input fields
+            function showPlayerNameInputs() {
+                const playerCount = parseInt(document.getElementById('player-count').value);
+                const nameInputsContainer = document.getElementById('player-names-inputs');
+                nameInputsContainer.innerHTML = '';
+                
+                // Create input fields for each player
+                for (let i = 0; i < playerCount; i++) {
+                    const inputGroup = document.createElement('div');
+                    inputGroup.style.margin = '10px 0';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = `Player ${i+1} Name: `;
+                    label.setAttribute('for', `player${i+1}-name`);
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.id = `player${i+1}-name`;
+                    input.placeholder = `Player ${i+1}`;
+                    input.style.padding = '8px';
+                    input.style.borderRadius = '5px';
+                    input.style.border = '1px solid #ccc';
+                    input.style.marginLeft = '10px';
+                    
+                    inputGroup.appendChild(label);
+                    inputGroup.appendChild(input);
+                    nameInputsContainer.appendChild(inputGroup);
+                }
+                
+                // Show the name inputs container
+                document.getElementById('player-names-container').style.display = 'block';
+                document.getElementById('show-name-inputs-btn').style.display = 'none';
+            }
+
+            function setupPlayers() {
+                game.players = [];
+                game.scores = [];
+                
+                for (let i = 0; i < game.playerCount; i++) {
+                    // Get the player name from input field, or use default if empty
+                    const nameInput = document.getElementById(`player${i+1}-name`);
+                    const playerName = nameInput && nameInput.value.trim() ? nameInput.value.trim() : `Player ${i+1}`;
+                    
+                    game.players.push({
+                        id: i + 1,
+                        name: playerName,
+                        hand: [],
+                        captured: [],
+                        scopa: 0,
+                        sips: 0,
+                        halveBak: 0
+                    });
+                    game.scores.push(0);
+                }
+            }
+            
+            function createPlayerAreas() {
+                const allPlayerAreas = document.getElementById('all-player-areas');
+                allPlayerAreas.innerHTML = '';
+                
+                for (let i = 0; i < game.playerCount; i++) {
+                    const playerArea = document.createElement('div');
+                    playerArea.className = 'player-area';
+                    playerArea.id = `player${i+1}-area`;
+                    
+                    if (i === game.currentPlayer) {
+                        playerArea.classList.add('current-player');
+                    }
+                    
+                    playerArea.innerHTML = `
+                        <h2>Player ${i+1}'s Hand</h2>
+                        <div class="cards-container" id="player${i+1}-hand">
+                            <!-- Player's cards will be inserted here -->
+                        </div>
+                    `;
+                    
+                    allPlayerAreas.appendChild(playerArea);
+                }
+            }
+            
+            // Create score display dynamically
+            function createScoreDisplay() {
+                const scoreContainer = document.getElementById('score-container');
+                scoreContainer.innerHTML = '';
+                
+                for (let i = 0; i < game.playerCount; i++) {
+                    const scoreBox = document.createElement('div');
+                    scoreBox.className = 'score-box';
+                    
+                    scoreBox.innerHTML = `
+                        <span>Player ${i+1}: <span id="score-player${i+1}">0</span></span>
+                        <div class="captured-cards" id="captured-player${i+1}">Cards: 0 (<span class="scopa-indicator" id="scopa-player${i+1}">0</span> scopa)</div>
+                        <div class="sips-indicator" id="sips-player${i+1}">Sips to take: 0</div>
+                        <div class="halve-bak-indicator" id="halve-bak-player${i+1}">Halve bakken te trekken: 0</div>
+                    `;
+                    
+                    scoreContainer.appendChild(scoreBox);
+                }
+            }
+            
+            // Create a standard 40-card Italian deck
+            function createDeck() {
+                game.deck = [];
+                const suits = ['cups', 'coins', 'swords', 'clubs'];
+                const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                
+                for (const suit of suits) {
+                    for (const value of values) {
+                        game.deck.push({ suit, value });
+                    }
+                }
+                
+                console.log("Deck created with", game.deck.length, "cards");
+                if (game.deck.length !== 40) {
+                    console.error("ERROR: Deck should have exactly 40 cards!");
+                }
+            }
+            
+            // Shuffle the deck
+            function shuffleDeck() {
+                for (let i = game.deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [game.deck[i], game.deck[j]] = [game.deck[j], game.deck[i]];
+                }
+            }
+            
+            // Deal cards to players and table
+            function dealCards() {
+                game.table = [];
+                
+                // Reset all players' hands
+                for (let i = 0; i < game.playerCount; i++) {
+                    game.players[i].hand = [];
+                }
+                
+                // Determine number of table cards
+                const tableCardCount = game.playerCount === 5 ? 5 : 4;
+                
+                // Place cards on the table
+                for (let i = 0; i < tableCardCount; i++) {
+                    if (game.deck.length > 0) {
+                        game.table.push(game.deck.pop());
+                    }
+                }
+
+                // Deal cards to players based on player count
+                if (game.playerCount < 5) {
+                    for (let i = 0; i < game.playerCount; i++) {
+                        for (let j = 0; j < 4; j++) {
+                            if (game.deck.length > 0) {
+                                game.players[i].hand.push(game.deck.pop());
+                            }
+                        }
+                    }
+                } else {
+                    for (let i = 0; i < game.playerCount; i++) {
+                        for (let j = 0; j < 3; j++) {
+                            if (game.deck.length > 0) {
+                                game.players[i].hand.push(game.deck.pop());
+                            }
+                        }
+                    }
+                }
+                
+                console.log("Cards dealt. Table:", game.table, "Players:", game.players);
+            }
+
+            // Deal new hands when needed
+            function dealNewHands() {
+                // Deal cards to players based on player count
+                let cardsToDeal;
+                if ((game.deck.length / game.playerCount) % 5 === 0) {
+                    cardsToDeal = 5;
+                } else if (game.playerCount === 6) {
+                    cardsToDeal = 3;
+                } else {
+                    cardsToDeal = 4;
+                }
+
+                for (let i = 0; i < game.playerCount; i++) {
+                    for (let j = 0; j < cardsToDeal; j++) {
+                        if (game.deck.length > 0) {
+                            game.players[i].hand.push(game.deck.pop());
+                        }
+                    }
+                }
+                
+                // Check if we were able to deal cards to all players
+                for (let i = 0; i < game.playerCount; i++) {
+                    if (game.players[i].hand.length === 0) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+
+            // Check if there are enough cards to deal a new round
+            function canDealNewRound() {
+                let cardsNeeded = 0;
+                
+                if (game.playerCount === 2 || game.playerCount === 4) {
+                    cardsNeeded = 5;
+                } else if (game.playerCount === 3 || game.playerCount === 5) {
+                    cardsNeeded = 4;
+                } else if (game.playerCount === 6) {
+                    cardsNeeded = 3;
+                }
+                
+                return game.deck.length >= cardsNeeded;
+            }
+
+            // Add this function to create the pass device screen
+            function showPassDeviceScreen() {
+                // Create overlay for the pass device screen
+                const overlay = document.createElement('div');
+                overlay.id = 'pass-device-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                overlay.style.zIndex = '1000';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.color = '#ffffff';
+                
+                // Get current player's sips and halve bak
+                const sipsToTake = game.players[game.currentPlayer].sips;
+                const halveBakToTake = game.players[game.currentPlayer].halveBak;
+                
+                let sipsMessage = '';
+                
+                if (sipsToTake > 0 && halveBakToTake > 0) {
+                    sipsMessage = `<h3 style="color: #ff9800; margin-bottom: 15px;">Ho scopato tua madre ${getPlayerName(game.currentPlayer)}! You have ${halveBakToTake} halve bak${halveBakToTake !== 1 ? 'ken' : ''} te trekken and ${sipsToTake} sip${sipsToTake !== 1 ? 's' : ''} to take!</h3>`;
+                    // Reset sips after showing the message
+                    game.players[game.currentPlayer].sips = 0;
+                    game.players[game.currentPlayer].halveBak = 0;
+                } else if (halveBakToTake > 0) {
+                    sipsMessage = `<h3 style="color: #ff5722; margin-bottom: 30px;">Ho scopato tua madre ${getPlayerName(game.currentPlayer)}! You have ${halveBakToTake} halve bak${halveBakToTake !== 1 ? 'ken' : ''} te trekken!</h3>`;
+                    // Reset halve bak after showing the message
+                    game.players[game.currentPlayer].halveBak = 0;
+                } else if (sipsToTake > 0) {
+                    sipsMessage = `<h3 style="color: #ff9800; margin-bottom: 15px;">You have ${sipsToTake} sip${sipsToTake !== 1 ? 's' : ''} to take!</h3>`;
+                    // Reset sips after showing the message
+                    game.players[game.currentPlayer].sips = 0;
+                }
+                
+                // Add content to the overlay
+                overlay.innerHTML = `
+                    <h1 style="color: #ffd700; font-size: 2em; margin-bottom: 20px;">Pass the device to</h1>
+                    <h2 style="font-size: 1.8em; margin-bottom: 30px;">${getPlayerName(game.currentPlayer)}</h2>
+                    ${sipsMessage}
+                    <button id="start-turn-btn" style="background-color: #ffd700; color: #2e7d32; border: none; padding: 15px 30px; 
+                    border-radius: 8px; font-size: 1.2em; cursor: pointer; font-weight: bold;">Start My Turn</button>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                // Add event listener to the button
+                document.getElementById('start-turn-btn').addEventListener('click', function() {
+                    document.body.removeChild(overlay);
+                    updateDisplay();
+                });
+            }
+
+            // Add this function to update only the table display
+            function updateTableDisplay() {
+                // Clear and update table cards
+                const tableCardsElement = document.getElementById('table-cards');
+                if (tableCardsElement) {
+                    tableCardsElement.innerHTML = '';
+                    
+                    // Display table cards
+                    game.table.forEach((card, index) => {
+                        const cardElement = createCardElement(card, index, 'table');
+                        tableCardsElement.appendChild(cardElement);
+                    });
+                }
+                
+                // Hide all player hands by making them empty
+                for (let i = 0; i < game.playerCount; i++) {
+                    const playerHand = document.getElementById(`player${i+1}-hand`);
+                    if (playerHand) {
+                        playerHand.innerHTML = '';
+                    }
+                }
+            }
+            
+            // Update the display to reflect game state
+            function updateDisplay() {
+                console.log("Updating display. Table cards:", game.table.length);
+                console.log("Updating display. Current player:", game.currentPlayer);
+                console.log("Players:", game.players.map(p => p.hand.length));
+                
+                // Ensure board area is visible
+                const boardArea = document.querySelector('.board-area');
+                if (boardArea) {
+                    boardArea.style.display = 'block';
+                }
+                
+                // Clear and update table cards
+                const tableCardsElement = document.getElementById('table-cards');
+                if (tableCardsElement) {
+                    tableCardsElement.innerHTML = '';
+                    
+                    // Display table cards and log for debugging
+                    console.log("Table cards to display:", game.table);
+                    game.table.forEach((card, index) => {
+                        const cardElement = createCardElement(card, index, 'table');
+                        tableCardsElement.appendChild(cardElement);
+                    });
+                } else {
+                    console.error("Table cards element not found!");
+                    // Try to recreate it if missing
+                    ensureBoardAreaExists();
+                }
+                
+                // Update each player's hand display
+                for (let i = 0; i < game.playerCount; i++) {
+                    const playerHand = document.getElementById(`player${i+1}-hand`);
+                    if (playerHand) {
+                        playerHand.innerHTML = '';
+                        
+                        // Make sure the player has cards in their hand
+                        if (game.players[i] && game.players[i].hand) {
+                            console.log(`Player ${i+1} has ${game.players[i].hand.length} cards`);
+                            
+                            // Display player's hand
+                            game.players[i].hand.forEach((card, index) => {
+                                const cardElement = createCardElement(card, index, 'hand', i);
+                                playerHand.appendChild(cardElement);
+                            });
+                        } else {
+                            console.error(`Player ${i+1} has no hand property or it is undefined`);
+                        }
+                        
+                        // Highlight current player's area
+                        const playerArea = document.getElementById(`player${i+1}-area`);
+                        if (playerArea) {
+                            playerArea.classList.toggle('current-player', game.currentPlayer === i);
+                        }
+                    } else {
+                        console.error(`Could not find element for player${i+1}-hand`);
+                    }
+                }
+                
+                // Update score display
+                updateScoreDisplay();
+            }
+            
+            // Create card element
+            function createCardElement(card, index, type, playerIndex = null) {
+                const cardElement = document.createElement('div');
+                cardElement.className = `card ${card.suit}`;
+                
+                // Add selectable class for appropriate cards
+                if ((type === 'hand' && playerIndex === game.currentPlayer) || 
+                    (type === 'table' && game.selectedHandCard !== null)) {
+                    cardElement.classList.add('selectable');
+                }
+                
+                // Check if the card is selected
+                if (type === 'hand' && playerIndex === game.currentPlayer && 
+                    index === game.selectedHandCard) {
+                    cardElement.classList.add('selected');
+                }
+                
+                if (type === 'table' && game.selectedTableCards.includes(index)) {
+                    cardElement.classList.add('selected');
+                }
+                
+                // Show cards only for table or current player's hand
+                if (type === 'table' || (type === 'hand' && playerIndex === game.currentPlayer)) {
+                    cardElement.innerHTML = `
+                        <div class="card-value">${card.value}</div>
+                        <div class="card-suit">${card.suit}</div>
+                    `;
+                } else {
+                    // Always hide cards for opponents
+                    cardElement.classList.add('face-down');
+                    cardElement.innerHTML = '';
+                }
+                
+                // Add event listeners
+                if (type === 'hand' && playerIndex === game.currentPlayer) {
+                    cardElement.addEventListener('click', () => handleHandCardClick(index));
+                } else if (type === 'table' && game.selectedHandCard !== null) {
+                    cardElement.addEventListener('click', () => handleTableCardClick(index));
+                }
+                
+                return cardElement;
+            }
+            
+            // Check if board area is setup
+            function ensureBoardAreaExists() {
+                let boardArea = document.querySelector('.board-area');
+                
+                if (!boardArea) {
+                    console.log("Board area not found, creating it");
+                    boardArea = document.createElement('div');
+                    boardArea.className = 'board-area';
+                    boardArea.innerHTML = `
+                        <h2>Table</h2>
+                        <div class="cards-container" id="table-cards">
+                            <!-- Table cards will be inserted here -->
+                        </div>
+                    `;
+                    
+                    // Insert board area after player areas or directly into the game container
+                    const allPlayerAreas = document.getElementById('all-player-areas');
+                    if (allPlayerAreas) {
+                        allPlayerAreas.parentNode.insertBefore(boardArea, allPlayerAreas.nextSibling);
+                    } else {
+                        document.querySelector('.game-container').appendChild(boardArea);
+                    }
+                }
+                
+                // Make sure table cards container exists
+                let tableCards = document.getElementById('table-cards');
+                if (!tableCards) {
+                    console.log("Table cards container not found, creating it");
+                    tableCards = document.createElement('div');
+                    tableCards.className = 'cards-container';
+                    tableCards.id = 'table-cards';
+                    boardArea.appendChild(tableCards);
+                }
+                
+                // Explicitly make sure the board area is visible
+                boardArea.style.display = 'block';
+            }
+
+            // Handle a click on a hand card
+            function handleHandCardClick(index) {
+                if (game.gameEnded) return;
+                
+                // Clear previous selections
+                game.selectedHandCard = index;
+                game.selectedTableCards = [];
+                
+                // Check for possible captures
+                const possibleCaptures = findPossibleCaptures(index);
+                
+                // Update status message
+                const cardValue = game.players[game.currentPlayer].hand[index].value;
+                
+                if (possibleCaptures.length > 0) {
+                    statusMessage.textContent = `Selected card ${cardValue}. Now select table cards to capture.`;
+                    endTurnBtn.disabled = true;
+                } else {
+                    statusMessage.textContent = `Selected card ${cardValue}. No captures possible. Click "End Turn" to place on table.`;
+                    endTurnBtn.disabled = false;
+                }
+                
+                updateDisplay();
+            }
+            
+            // Handle a click on a table card
+            function handleTableCardClick(index) {
+                if (game.gameEnded || game.selectedHandCard === null) return;
+                
+                // Toggle selection of table card
+                const cardIndex = game.selectedTableCards.indexOf(index);
+                if (cardIndex === -1) {
+                    game.selectedTableCards.push(index);
+                } else {
+                    game.selectedTableCards.splice(cardIndex, 1);
+                }
+                
+                // Check if current selection is valid
+                const handCard = game.players[game.currentPlayer].hand[game.selectedHandCard];
+                const selectedCardsSum = game.selectedTableCards.reduce((sum, idx) => 
+                    sum + game.table[idx].value, 0);
+                
+                endTurnBtn.disabled = !(selectedCardsSum === handCard.value);
+                
+                if (selectedCardsSum > handCard.value) {
+                    statusMessage.textContent = `Sum (${selectedCardsSum}) exceeds your card value (${handCard.value}). Select fewer cards.`;
+                } else if (selectedCardsSum < handCard.value) {
+                    statusMessage.textContent = `Sum (${selectedCardsSum}) is less than your card value (${handCard.value}). Select more cards or different ones.`;
+                } else {
+                    statusMessage.textContent = `Valid capture! Click "End Turn" to capture these cards.`;
+                }
+                
+                updateDisplay();
+            }
+            
+            // Find possible captures for a hand card
+            function findPossibleCaptures(handIndex) {
+                const handCard = game.players[game.currentPlayer].hand[handIndex];
+                const possibleCaptures = [];
+                
+                // Check for single card captures
+                game.table.forEach((tableCard, index) => {
+                    if (tableCard.value === handCard.value) {
+                        possibleCaptures.push([index]);
+                    }
+                });
+                
+                // Check for multi-card captures
+                // For now, we just check pairs that sum correctly
+                for (let i = 0; i < game.table.length; i++) {
+                    for (let j = i + 1; j < game.table.length; j++) {
+                        const sum = game.table[i].value + game.table[j].value;
+                        if (sum === handCard.value) {
+                            possibleCaptures.push([i, j]);
+                        }
+                    }
+                }
+                
+                return possibleCaptures;
+            }
+            
+            // Handle end of turn
+            function endTurn() {
+                const currentPlayerObj = game.players[game.currentPlayer];
+                const handCard = currentPlayerObj.hand[game.selectedHandCard];
+                
+                // Remove the played card from the player's hand
+                currentPlayerObj.hand.splice(game.selectedHandCard, 1);
+                
+                if (game.selectedTableCards.length > 0) {
+                    // Capture cards
+                    const capturedCards = [];
+                    
+                    // Sort indices in descending order to avoid shifting issues when removing items
+                    game.selectedTableCards.sort((a, b) => b - a);
+                    
+                    // Remove captured cards from the table
+                    for (const index of game.selectedTableCards) {
+                        capturedCards.push(game.table[index]);
+                        game.table.splice(index, 1);
+                    }
+                    
+                    // Add captured cards to player's pile
+                    currentPlayerObj.captured.push(handCard, ...capturedCards);
+                    
+                    // Calculate sips based on number of cards captured (including the played card)
+                    const sipsToAssign = capturedCards.length + 1;
+                    
+                    // Check for scopa
+                    if (game.table.length === 0) {
+                        currentPlayerObj.scopa++;
+                        
+                        // Show player selection for assigning sips
+                        showPlayerSelectForScopaRewards(sipsToAssign, `Ho scopato! ${getPlayerName(game.currentPlayer)} captured all cards from the table! Choose a player to take a halve bak and ${sipsToAssign} sips.`);
+                    } else {
+                        // Show player selection for assigning sips
+                        showPlayerSelectForSips(sipsToAssign, `${getPlayerName(game.currentPlayer)} captured ${capturedCards.length} cards. Choose a player to take ${sipsToAssign} sips.`);
+                    }
+                } else {
+                    // Place card on the table if no capture
+                    game.table.push(handCard);
+                    statusMessage.textContent = `${getPlayerName(game.currentPlayer)} placed a ${handCard.value} of ${handCard.suit} on the table.`;
+                    
+                    // Continue to next player immediately
+                    continueToNextPlayer();
+                }
+            }
+
+            // Show player selection overlay for assigning sips
+            function showPlayerSelectForSips(sipsCount, message) {
+                // Create overlay for player selection
+                const overlay = document.createElement('div');
+                overlay.id = 'player-select-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                overlay.style.zIndex = '1000';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.color = '#ffffff';
+                
+                // Create message and selection content
+                overlay.innerHTML = `
+                    <h2 style="color: #ffd700; margin-bottom: 20px;">${message}</h2>
+                    <div style="margin-bottom: 20px;">
+                        <p>Select a player to take the sips:</p>
+                        <div id="player-buttons" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px;">
+                            <!-- Player buttons will be added here -->
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                // Add buttons for each player
+                const playerButtons = document.getElementById('player-buttons');
+                for (let i = 0; i < game.playerCount; i++) {
+                    // Skip the current player (can't assign sips to self)
+                    if (i === game.currentPlayer) continue;
+                    
+                    const button = document.createElement('button');
+                    button.textContent = getPlayerName(i);
+                    button.style.backgroundColor = '#ffd700';
+                    button.style.color = '#2e7d32';
+                    button.style.border = 'none';
+                    button.style.padding = '10px 20px';
+                    button.style.borderRadius = '5px';
+                    button.style.cursor = 'pointer';
+                    button.style.fontWeight = 'bold';
+                    
+                    button.addEventListener('click', function() {
+                        // Assign sips to the selected player
+                        game.players[i].sips += sipsCount;
+                        document.body.removeChild(overlay);
+                        
+                        // Update status message
+                        statusMessage.textContent = `${getPlayerName(game.currentPlayer)} assigned ${sipsCount} sips to ${getPlayerName(i)}.`;
+                        
+                        // Continue to next player
+                        continueToNextPlayer();
+                    });
+                    
+                    playerButtons.appendChild(button);
+                }
+            }
+
+            // Add this new function for scopa rewards
+            function showPlayerSelectForScopaRewards(sipsCount, message) {
+                // Create overlay for player selection
+                const overlay = document.createElement('div');
+                overlay.id = 'player-select-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                overlay.style.zIndex = '1000';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.color = '#ffffff';
+                
+                // Create message and selection content
+                overlay.innerHTML = `
+                    <h2 style="color: #ffd700; margin-bottom: 20px;">${message}</h2>
+                    <div style="margin-bottom: 20px;">
+                        <p>Select a player to take the sips:</p>
+                        <div id="player-buttons" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px;">
+                            <!-- Player buttons will be added here -->
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <p>Select a player to take a halve bak:</p>
+                        <div id="halve-bak-buttons" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px;">
+                            <button id="skip-halve-bak" style="background-color: #cccccc; color: #333333;">Skip Halve Bak</button>
+                            <!-- Player buttons will be added here -->
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                // Add buttons for each player for sips
+                const playerButtons = document.getElementById('player-buttons');
+                for (let i = 0; i < game.playerCount; i++) {
+                    // Skip the current player (can't assign sips to self)
+                    if (i === game.currentPlayer) continue;
+                    
+                    const button = document.createElement('button');
+                    button.textContent = getPlayerName(i);
+                    button.style.backgroundColor = '#ffd700';
+                    button.style.color = '#2e7d32';
+                    button.style.border = 'none';
+                    button.style.padding = '10px 20px';
+                    button.style.borderRadius = '5px';
+                    button.style.cursor = 'pointer';
+                    button.style.fontWeight = 'bold';
+                    
+                    button.addEventListener('click', function() {
+                        // Assign sips to the selected player
+                        game.players[i].sips += sipsCount;
+                        
+                        // Save selected player for sips
+                        const sipsPlayerIndex = i;
+                        
+                        // Hide sips selection and proceed with halve bak selection
+                        playerButtons.parentElement.style.display = 'none';
+                        
+                        statusMessage.textContent = `${getPlayerName(game.currentPlayer)} assigned ${sipsCount} sips to ${getPlayerName(sipsPlayerIndex)}.`;
+                    });
+                    
+                    playerButtons.appendChild(button);
+                }
+                
+                // Add buttons for each player for halve bak
+                const halveBakButtons = document.getElementById('halve-bak-buttons');
+                for (let i = 0; i < game.playerCount; i++) {
+                    // Skip the current player (can't assign halve bak to self)
+                    if (i === game.currentPlayer) continue;
+                    
+                    const button = document.createElement('button');
+                    button.textContent = getPlayerName(i);
+                    button.style.backgroundColor = '#ff9800';
+                    button.style.color = '#333333';
+                    button.style.border = 'none';
+                    button.style.padding = '10px 20px';
+                    button.style.borderRadius = '5px';
+                    button.style.cursor = 'pointer';
+                    button.style.fontWeight = 'bold';
+                    
+                    button.addEventListener('click', function() {
+                        // Assign halve bak to the selected player
+                        game.players[i].halveBak += 1;
+                        
+                        // Update status message
+                        statusMessage.textContent += ` And assigned a halve bak to ${getPlayerName(i)}.`;
+                        
+                        // Remove the overlay and continue
+                        document.body.removeChild(overlay);
+                        
+                        // Continue to next player
+                        continueToNextPlayer();
+                    });
+                    
+                    halveBakButtons.appendChild(button);
+                }
+                
+                // Add skip button functionality
+                document.getElementById('skip-halve-bak').addEventListener('click', function() {
+                    // Remove the overlay and continue without assigning halve bak
+                    document.body.removeChild(overlay);
+                    
+                    // Continue to next player
+                    continueToNextPlayer();
+                });
+            }
+
+            // Continue to next player after handling sips assignment
+            function continueToNextPlayer() {
+                // Reset selections
+                game.selectedHandCard = null;
+                game.selectedTableCards = [];
+                
+                // Check if all hands are empty and need to be refilled
+                let allHandsEmpty = true;
+                for (let i = 0; i < game.playerCount; i++) {
+                    if (game.players[i].hand.length > 0) {
+                        allHandsEmpty = false;
+                        break;
+                    }
+                }
+                
+                if (allHandsEmpty) {
+                    if (game.deck.length > 0 && canDealNewRound()) {
+                        dealNewHands();
+                        statusMessage.textContent += " New cards have been dealt.";
+                    } else {
+                        // Last round - capture any remaining table cards
+                        if (game.table.length > 0) {
+                            const lastPlayer = game.currentPlayer;
+                            game.players[lastPlayer].captured.push(...game.table);
+                            
+                            // For remaining cards at game end, let player choose who gets sips
+                            const remainingCardCount = game.table.length;
+                            showPlayerSelectForSips(remainingCardCount, `${getPlayerName(lastPlayer)} gets the remaining ${remainingCardCount} table cards. Choose a player to take ${remainingCardCount} sips.`);
+                            game.table = [];
+                            
+                            // Game will end after player selection
+                            game.gameEnded = true;
+                            return;
+                        }
+                        
+                        // Game ends
+                        endGame();
+                        return;
+                    }
+                }
+                
+                // Move to next player
+                setCurrentPlayer((game.currentPlayer + 1) % game.playerCount);
+                
+                // Update the display to show only table cards temporarily
+                updateTableDisplay();
+                
+                // Update score display
+                updateScoreDisplay();
+                
+                // Show pass device screen
+                showPassDeviceScreen();
+                
+                // Disable buttons while on pass device screen
+                endTurnBtn.disabled = true;
+            }
+            
+            // Calculate final scores
+            function calculateScores() {
+                // Reset scores
+                game.scores = new Array(game.playerCount).fill(0);
+                
+                // Add points for scopas
+                for (let i = 0; i < game.playerCount; i++) {
+                    game.scores[i] += game.players[i].scopa;
+                }
+                
+                // Points for most cards
+                const cardsCount = game.players.map(player => player.captured.length);
+                const maxCards = Math.max(...cardsCount);
+                for (let i = 0; i < game.playerCount; i++) {
+                    if (cardsCount[i] === maxCards) {
+                        game.scores[i] += 1;
+                    }
+                }
+                
+                // Points for most coins
+                const coinCards = game.players.map(player => countCardsBySuit(player.captured, 'coins'));
+                const maxCoins = Math.max(...coinCards);
+                for (let i = 0; i < game.playerCount; i++) {
+                    if (coinCards[i] === maxCoins) {
+                        game.scores[i] += 1;
+                    }
+                }
+                
+                // Point for the seven of coins
+                for (let i = 0; i < game.playerCount; i++) {
+                    if (hasSpecificCard(game.players[i].captured, 7, 'coins')) {
+                        game.scores[i] += 1;
+                    }
+                }
+                
+                // Points for "prime"
+                const primePoints = game.players.map(player => calculatePrimePoints(player.captured));
+                const maxPrime = Math.max(...primePoints);
+                for (let i = 0; i < game.playerCount; i++) {
+                    if (primePoints[i] === maxPrime) {
+                        game.scores[i] += 1;
+                    }
+                }
+            }
+            
+            // Helper functions for score calculation
+            function countCardsBySuit(cards, targetSuit) {
+                return cards.filter(card => card.suit === targetSuit).length;
+            }
+            
+            function hasSpecificCard(cards, value, suit) {
+                return cards.some(card => card.value === value && card.suit === suit);
+            }
+            
+            function calculatePrimePoints(cards) {
+                // Group cards by suit
+                const suits = {};
+                for (const card of cards) {
+                    if (!suits[card.suit]) {
+                        suits[card.suit] = [];
+                    }
+                    suits[card.suit].push(card.value);
+                }
+                
+                // Calculate prime points (best card in each suit)
+                let totalPoints = 0;
+                for (const suit in suits) {
+                    const bestCard = Math.max(...suits[suit]);
+                    // Convert card value to prime points
+                    switch (bestCard) {
+                        case 7: totalPoints += 21; break;
+                        case 6: totalPoints += 18; break;
+                        case 1: totalPoints += 16; break;
+                        case 5: totalPoints += 15; break;
+                        case 4: totalPoints += 14; break;
+                        case 3: totalPoints += 13; break;
+                        case 2: totalPoints += 12; break;
+                        default: totalPoints += 10; break;
+                    }
+                }
+                
+                return totalPoints;
+            }
+            
+            // Update the score display
+            function updateScoreDisplay() {
+                for (let i = 0; i < game.playerCount; i++) {
+                    const scoreElement = document.getElementById(`score-player${i+1}`);
+                    const capturedElement = document.getElementById(`captured-player${i+1}`);
+                    const scopaElement = document.getElementById(`scopa-player${i+1}`);
+                    const sipsElement = document.getElementById(`sips-player${i+1}`);
+                    const halveBakElement = document.getElementById(`halve-bak-player${i+1}`);
+                    
+                    if (scoreElement) scoreElement.textContent = game.scores[i];
+                    if (capturedElement) capturedElement.textContent = `Cards: ${game.players[i].captured.length}`;
+                    if (scopaElement) scopaElement.textContent = game.players[i].scopa;
+                    if (sipsElement) sipsElement.textContent = `Sips to take: ${game.players[i].sips}`;
+                    if (halveBakElement) halveBakElement.textContent = `Halve bakken te trekken: ${game.players[i].halveBak}`;
+                }
+            }
+
+            // Set the current player
+            function setCurrentPlayer(playerIndex) {
+                game.currentPlayer = playerIndex;
+                statusMessage.textContent = `${getPlayerName(playerIndex)}'s turn. Select a card to play.`;
+            }
+            
+            // Get player name
+            function getPlayerName(playerIndex) {
+                return game.players[playerIndex].name || `Player ${playerIndex + 1}`;
+            }
+            
+            // Start game with selected number of players
+            function startGame() {
+                // Get selected player count
+                game.playerCount = parseInt(document.getElementById('player-count').value);
+                console.log("Starting game with", game.playerCount, "players");
+                
+                // Hide player selection
+                document.getElementById('player-selection').style.display = 'none';
+                
+                // Reset game state
+                game.deck = [];
+                game.table = [];
+                game.selectedHandCard = null;
+                game.selectedTableCards = [];
+                game.gameEnded = false;
+                newGameBtn.textContent = "New Game";
+                endTurnBtn.disabled = true;
+                
+                // Setup players array
+                setupPlayers();
+                console.log("Players setup:", game.players);
+
+                // Ensure board area exists and is visible
+                ensureBoardAreaExists();
+                
+                // Create dynamic player areas
+                createPlayerAreas();
+                
+                // Create score display
+                createScoreDisplay();
+                
+                // Initialize the game (create deck, deal cards, etc.)
+                createDeck();
+                shuffleDeck();
+                dealCards();
+                
+                // Set current player
+                setCurrentPlayer(0);
+                
+                // Show all game UI elements
+                document.querySelector('.controls').style.display = 'flex';
+                document.querySelector('.board-area').style.display = 'block';
+                document.getElementById('status-message').style.display = 'block';
+                document.getElementById('score-container').style.display = 'flex';
+                
+                // Debug output
+                debugGameState();
+                
+                // Show only the table initially
+                updateTableDisplay();
+                
+                // Show pass device screen for the first player
+                showPassDeviceScreen();
+            }
+
+            function endGame() {
+                game.gameEnded = true;
+                calculateScores();
+                updateScoreDisplay();
+                
+                // Find winner(s)
+                const maxScore = Math.max(...game.scores);
+                const winners = [];
+                for (let i = 0; i < game.playerCount; i++) {
+                    if (game.scores[i] === maxScore) {
+                        winners.push(i);
+                    }
+                }
+                
+                // Calculate additional sips based on captured cards (total captured / 2, rounded up)
+                for (let i = 0; i < game.playerCount; i++) {
+                    const capturedCardSips = Math.ceil(game.players[i].captured.length / 2);
+                    if (capturedCardSips > 0) {
+                        showPlayerSelectForEndGameSips(i, capturedCardSips);
+                        return; // Exit function here, the rest will continue after all players have assigned sips
+                    }
+                }
+                
+                // If no sips to assign or after all sips are assigned, display final results
+                displayFinalResults(winners, maxScore);
+            }
+
+            // New function to handle end-game sips assignment
+            function showPlayerSelectForEndGameSips(playerIndex, sipsCount) {
+                // Create overlay for player selection
+                const overlay = document.createElement('div');
+                overlay.id = 'player-select-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                overlay.style.zIndex = '1000';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.color = '#ffffff';
+                
+                // Create message and selection content
+                overlay.innerHTML = `
+                    <h2 style="color: #ffd700; margin-bottom: 20px;">${getPlayerName(playerIndex)}, assign ${sipsCount} sips (${game.players[playerIndex].captured.length} captured cards ÷ 2)</h2>
+                    <div style="margin-bottom: 20px;">
+                        <div id="player-buttons" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px;">
+                            <!-- Player buttons will be added here -->
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                // Add buttons for each player
+                const playerButtons = document.getElementById('player-buttons');
+                for (let i = 0; i < game.playerCount; i++) {
+                    // Skip the current player (can't assign sips to self)
+                    if (i === playerIndex) continue;
+                    
+                    const button = document.createElement('button');
+                    button.textContent = getPlayerName(i);
+                    button.style.backgroundColor = '#ffd700';
+                    button.style.color = '#2e7d32';
+                    button.style.border = 'none';
+                    button.style.padding = '10px 20px';
+                    button.style.borderRadius = '5px';
+                    button.style.cursor = 'pointer';
+                    button.style.fontWeight = 'bold';
+                    
+                    button.addEventListener('click', function() {
+                        // Assign sips to the selected player
+                        game.players[i].sips += sipsCount;
+                        document.body.removeChild(overlay);
+                        
+                        // Update status message
+                        statusMessage.textContent = `${getPlayerName(playerIndex)} assigned ${sipsCount} sips to ${getPlayerName(i)}.`;
+                        
+                        // Move to next player's sips assignment or display final results
+                        let nextPlayerToAssign = -1;
+                        for (let j = playerIndex + 1; j < game.playerCount; j++) {
+                            const nextSipsCount = Math.ceil(game.players[j].captured.length / 2);
+                            if (nextSipsCount > 0) {
+                                nextPlayerToAssign = j;
+                                break;
+                            }
+                        }
+                        
+                        if (nextPlayerToAssign >= 0) {
+                            const nextSipsCount = Math.ceil(game.players[nextPlayerToAssign].captured.length / 2);
+                            showPlayerSelectForEndGameSips(nextPlayerToAssign, nextSipsCount);
+                        } else {
+                            // Calculate winners again since we exited the endGame function early
+                            const maxScore = Math.max(...game.scores);
+                            const winners = [];
+                            for (let i = 0; i < game.playerCount; i++) {
+                                if (game.scores[i] === maxScore) {
+                                    winners.push(i);
+                                }
+                            }
+                            displayFinalResults(winners, maxScore);
+                        }
+                    });
+                    
+                    playerButtons.appendChild(button);
+                }
+            }
+
+            // New function to display final results after all sips are assigned
+            function displayFinalResults(winners, maxScore) {
+                let winnerMessage = '';
+                if (winners.length === 1) {
+                    winnerMessage = `${getPlayerName(winners[0])} wins with ${maxScore} points!`;
+                } else {
+                    const winnerNames = winners.map(w => getPlayerName(w)).join(' and ');
+                    winnerMessage = `It's a tie! ${winnerNames} win with ${maxScore} points each!`;
+                }
+                
+                // Show final sips distribution
+                let sipsMessage = '<br>Final sips to take: ';
+                let hasSips = false;
+                for (let i = 0; i < game.playerCount; i++) {
+                    if (game.players[i].sips > 0) {
+                        sipsMessage += `${getPlayerName(i)}: ${game.players[i].sips} sips, `;
+                        hasSips = true;
+                    }
+                }
+                
+                if (hasSips) {
+                    sipsMessage = sipsMessage.slice(0, -2); // Remove trailing comma and space
+                } else {
+                    sipsMessage += "None";
+                }
+                
+                // Add halve bak message if any
+                let halveBakMessage = '';
+                let hasHalveBak = false;
+                for (let i = 0; i < game.playerCount; i++) {
+                    if (game.players[i].halveBak > 0) {
+                        halveBakMessage += `${getPlayerName(i)}: ${game.players[i].halveBak} halve bak, `;
+                        hasHalveBak = true;
+                    }
+                }
+                
+                // Add to the winnerMessage
+                if (hasHalveBak) {
+                    halveBakMessage = halveBakMessage.slice(0, -2); // Remove trailing comma and space
+                    sipsMessage += '<br>Halve bak te trekken: ' + halveBakMessage;
+                }
+                
+                // Create and display game over message
+                const gameOverElement = document.createElement('div');
+                gameOverElement.className = 'game-over';
+                gameOverElement.innerHTML = winnerMessage + sipsMessage;
+                
+                // Remove any existing game-over element
+                const existingGameOver = document.querySelector('.game-over');
+                if (existingGameOver) {
+                    existingGameOver.remove();
+                }
+                
+                document.querySelector('.game-container').appendChild(gameOverElement);
+                
+                // Change new game button text
+                newGameBtn.textContent = "Play Again";
+                endTurnBtn.disabled = true;
+            }
+
+            function debugGameState() {
+                console.log("Current game state:");
+                console.log("Players:", JSON.parse(JSON.stringify(game.players)));
+                console.log("Table:", JSON.parse(JSON.stringify(game.table)));
+                console.log("Deck size:", game.deck.length);
+                console.log("Current player:", game.currentPlayer);
+                
+                // Check if player areas exist in DOM
+                for (let i = 0; i < game.playerCount; i++) {
+                    const playerHand = document.getElementById(`player${i+1}-hand`);
+                    console.log(`Player ${i+1} hand element exists:`, !!playerHand);
+                }
+            }
+            
+            // Event listeners
+            newGameBtn.addEventListener('click', () => {
+                game.gameEnded = false;
+                for (let i = 0; i < game.playerCount; i++) {
+                    game.players[i].captured = [];
+                    game.players[i].scopa = 0;
+                    game.scores[i] = 0;
+                }
+                // Replace "init()" with "startGame()"
+                startGame();
+            });
+            
+            endTurnBtn.addEventListener('click', endTurn);
+            
+            rulesBtn.addEventListener('click', () => {
+                if (rulesSection.style.display === 'none') {
+                    rulesSection.style.display = 'block';
+                    rulesBtn.textContent = 'Hide Rules';
+                } else {
+                    rulesSection.style.display = 'none';
+                    rulesBtn.textContent = 'Show Rules';
+                }
+            });
+            
+            // Initialize the game setup
+            initialize();
+        });
+    </script>
+</body>
+</html>

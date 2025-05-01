@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scopa - Sicilian Card Game</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Ho Scopato - Sicilian Drinking Game</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,6 +13,8 @@
             margin: 0;
             padding: 20px;
             text-align: center;
+            overscroll-behavior-y: contain;
+            overflow-y: hidden;
         }
 
         .game-container {
@@ -243,7 +246,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Scopa - Sicilian Card Game</h1>
+        <h1>Ho Scopato - Sicilian Drinking Game</h1>
 
         <div class="player-selection" id="player-selection">
             <label for="player-count">Number of Players: </label>
@@ -286,25 +289,23 @@
         </div>
 
         <div class="how-to-play" id="rules-section" style="display: none;">
-            <h3>How to Play Scopa</h3>
-            <p><strong>Objective:</strong> Capture cards from the table to earn points.</p>
-            <p><strong>Setup:</strong> Each player gets 3 cards, and 4 cards are placed on the table.</p>
+            <h3>How to Play Ho Scopato</h3>
+            <p><strong>Objective:</strong> Capture cards from the table to give away sips.</p>
+            <p><strong>Setup:</strong> Each player gets x cards, and y cards are placed on the table depending on the amount of players.</p>
             <p><strong>Turn:</strong> On your turn, you must play one card from your hand:</p>
             <ul>
                 <li>If your card matches a card on the table, you capture it.</li>
                 <li>If your card's value matches the sum of several cards, you can capture them all.</li>
                 <li>If you can't capture any cards, you must place your card on the table.</li>
-                <li>If you clear all cards from the table, you score a "scopa" (sweep).</li>
+                <li>If you clear all cards from the table, you score a "ho scopato".</li>
+                <li>If you have the last capture of the game, you get all remaining cards on the table.</li>
             </ul>
-            <p><strong>Scoring:</strong> At the end of the game, points are awarded for:</p>
+            <p><strong>Drinking:</strong> Sips can be given for:</p>
             <ul>
-                <li>Most cards captured: 1 point</li>
-                <li>Most coins captured: 1 point</li>
-                <li>Sette bello (7 of coins): 1 point</li>
-                <li>Most "prime" points: 1 point</li>
-                <li>Each scopa: 1 point</li>
+                <li>Each card captured is 1 sip.</li>
+                <li>A "ho scopato" is a halve bak.</li>
+                <li>At the end of the game each card captured divided by 2 rounded up is 1 sip.</li>
             </ul>
-            <p><strong>First to 11 points wins!</strong></p>
         </div>
     </div>
 

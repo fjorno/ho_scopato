@@ -30,6 +30,81 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
+        /* Toggle Menu Styles */
+        .menu-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .menu-toggle {
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hamburger {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 25px;
+            height: 20px;
+        }
+
+        .hamburger span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: #ffd700;
+            border-radius: 3px;
+        }
+
+        .menu {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 5px;
+            padding: 10px;
+            width: 150px;
+        }
+
+        .menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu ul li {
+            margin-bottom: 10px;
+        }
+
+        .menu ul li:last-child {
+            margin-bottom: 0;
+        }
+
+        .menu ul li button {
+            width: 100%;
+            text-align: left;
+            background-color: transparent;
+            color: #ffd700;
+            padding: 8px 10px;
+            transition: background-color 0.3s;
+        }
+
+        .menu ul li button:hover {
+            background-color: rgba(255, 215, 0, 0.2);
+            transform: none;
+        }
+
         h1 {
             color: #ffd700;
             margin-bottom: 30px;
@@ -252,6 +327,24 @@
     <div class="game-container">
         <h1>Ho Scopato - Sicilian Drinking Game</h1>
 
+        <!-- Toggle Menu -->
+        <div class="menu-container">
+            <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </button>
+            <div class="menu" id="menu" style="display: none;">
+                <ul>
+                    <li><button id="home-btn">Home</button></li>
+                    <li><button id="new-game-btn">New Game</button></li>
+                    <li><button id="rules-btn">Show Rules</button></li>
+                </ul>
+            </div>
+        </div>
+
         <div class="player-selection" id="player-selection">
             <label for="player-count">Number of Players: </label>
             <select id="player-count">
@@ -270,9 +363,9 @@
         </div>
         
         <div class="controls">
-            <button id="new-game-btn">New Game</button>
+            <!-- <button id="new-game-btn">New Game</button> -->
             <button id="end-turn-btn" disabled>End Turn</button>
-            <button id="rules-btn">Show Rules</button>
+            <!-- <button id="rules-btn">Show Rules</button> -->
         </div>
 
         <div class="status-message" id="status-message"></div>
@@ -318,12 +411,25 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             // Get references to key UI elements
+            const menuToggle = document.getElementById('menu-toggle');
+            const menu = document.getElementById('menu');
+            const homeBtn = document.getElementById('home-btn');
             const newGameBtn = document.getElementById('new-game-btn');
             const endTurnBtn = document.getElementById('end-turn-btn');
             const rulesBtn = document.getElementById('rules-btn');
             const statusMessage = document.getElementById('status-message');
             const rulesSection = document.getElementById('rules-section');
             const tableCards = document.getElementById('table-cards');
+
+            // Toggle menu functionality
+            menuToggle.addEventListener('click', function() {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // Home button functionality
+            homeBtn.addEventListener('click', function() {
+                window.location.href = '/';
+            });
             
             // Replace the score container
             const scoreContainerHTML = `
@@ -385,7 +491,18 @@
                 document.getElementById('show-name-inputs-btn').addEventListener('click', showPlayerNameInputs);
                 
                 // Add event listener to start button
-                document.getElementById('start-game-btn').addEventListener('click', startGame);
+                document.getElementById('start-game-btn').addEventListener('click', function() {
+                    // Hide player selection
+                    document.getElementById('player-selection').style.display = 'none';
+                    
+                    // Show controls and game elements
+                    document.querySelector('.controls').style.display = 'flex';
+                    document.getElementById('status-message').style.display = 'block';
+                    document.getElementById('score-container').style.display = 'flex';
+                    
+                    // Start the game
+                    startGame();
+                });
             }
             
             // Add this new function to create and show name input fields
@@ -420,6 +537,21 @@
                 // Show the name inputs container
                 document.getElementById('player-names-container').style.display = 'block';
                 document.getElementById('show-name-inputs-btn').style.display = 'none';
+
+                // Add event listener directly to the start game button when it's shown
+                document.getElementById('start-game-btn').onclick = function() {
+                    console.log("Start Game button clicked!");
+                    // Hide player selection
+                    document.getElementById('player-selection').style.display = 'none';
+                    
+                    // Show controls and game elements
+                    document.querySelector('.controls').style.display = 'flex';
+                    document.getElementById('status-message').style.display = 'block';
+                    document.getElementById('score-container').style.display = 'flex';
+                    
+                    // Start the game
+                    startGame();
+                };
             }
 
             function setupPlayers() {
@@ -1129,15 +1261,6 @@
                     
                     halveBakButtons.appendChild(button);
                 }
-                
-                // // Add skip button functionality
-                // document.getElementById('skip-halve-bak').addEventListener('click', function() {
-                //     // Remove the overlay and continue without assigning halve bak
-                //     document.body.removeChild(overlay);
-                    
-                //     // Continue to next player
-                //     continueToNextPlayer();
-                // });
             }
 
             // Continue to next player after handling sips assignment
@@ -1372,8 +1495,6 @@
                 game.selectedHandCard = null;
                 game.selectedTableCards = [];
                 game.gameEnded = false;
-                newGameBtn.textContent = "New Game";
-                endTurnBtn.disabled = true;
                 
                 // Setup players array
                 setupPlayers();
@@ -1605,10 +1726,10 @@
                     game.players[i].scopa = 0;
                     game.scores[i] = 0;
                 }
-                // Replace "init()" with "startGame()"
+                
                 startGame();
             });
-            
+
             endTurnBtn.addEventListener('click', endTurn);
             
             rulesBtn.addEventListener('click', () => {

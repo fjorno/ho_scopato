@@ -17,8 +17,8 @@
             margin: 0;
             padding: 20px;
             text-align: center;
-            overscroll-behavior-y: contain;
-            overflow-y: hidden;
+            /* overscroll-behavior-y: contain; */
+            /* overflow-y: hidden; */
         }
 
         .game-container {
@@ -438,7 +438,8 @@
                         captured: [],
                         scopa: 0,
                         sips: 0,
-                        halveBak: 0
+                        halveBak: 0,
+                        lastCaptureTime: -1
                     });
                     game.scores.push(0);
                 }
@@ -453,12 +454,15 @@
                     playerArea.className = 'player-area';
                     playerArea.id = `player${i+1}-area`;
                     
-                    if (i === game.currentPlayer) {
+                    // Only show the current player's area
+                    if (i !== game.currentPlayer) {
+                        playerArea.style.display = 'none';
+                    } else {
                         playerArea.classList.add('current-player');
                     }
                     
                     playerArea.innerHTML = `
-                        <h2>Player ${i+1}'s Hand</h2>
+                        <h2>${getPlayerName(i)}'s Hand</h2>
                         <div class="cards-container" id="player${i+1}-hand">
                             <!-- Player's cards will be inserted here -->
                         </div>
@@ -478,7 +482,7 @@
                     scoreBox.className = 'score-box';
                     
                     scoreBox.innerHTML = `
-                        <span>Player ${i+1}: <span id="score-player${i+1}">0</span></span>
+                        <span>${getPlayerName(i)}: <span id="score-player${i+1}">0</span></span>
                         <div class="captured-cards" id="captured-player${i+1}">Cards: 0 (<span class="scopa-indicator" id="scopa-player${i+1}">0</span> scopa)</div>
                         <div class="sips-indicator" id="sips-player${i+1}">Sips to take: 0</div>
                         <div class="halve-bak-indicator" id="halve-bak-player${i+1}">Halve bakken te trekken: 0</div>
@@ -671,11 +675,12 @@
                     });
                 }
                 
-                // Hide all player hands by making them empty
+                // Hide all player areas
                 for (let i = 0; i < game.playerCount; i++) {
-                    const playerHand = document.getElementById(`player${i+1}-hand`);
-                    if (playerHand) {
-                        playerHand.innerHTML = '';
+                    const playerArea = document.getElementById(`player${i+1}-area`);
+                    if (playerArea) {
+                        playerArea.style.display = 'none';
+                        playerArea.classList.remove('current-player');
                     }
                 }
             }
@@ -709,32 +714,37 @@
                     ensureBoardAreaExists();
                 }
                 
-                // Update each player's hand display
+                // Hide all player areas and only show current player's area
                 for (let i = 0; i < game.playerCount; i++) {
-                    const playerHand = document.getElementById(`player${i+1}-hand`);
-                    if (playerHand) {
-                        playerHand.innerHTML = '';
-                        
-                        // Make sure the player has cards in their hand
-                        if (game.players[i] && game.players[i].hand) {
-                            console.log(`Player ${i+1} has ${game.players[i].hand.length} cards`);
+                    const playerArea = document.getElementById(`player${i+1}-area`);
+                    if (playerArea) {
+                        // Only show current player's area
+                        if (i === game.currentPlayer) {
+                            playerArea.style.display = 'block';
+                            playerArea.classList.add('current-player');
                             
-                            // Display player's hand
-                            game.players[i].hand.forEach((card, index) => {
-                                const cardElement = createCardElement(card, index, 'hand', i);
-                                playerHand.appendChild(cardElement);
-                            });
+                            // Update the player's hand
+                            const playerHand = document.getElementById(`player${i+1}-hand`);
+                            if (playerHand) {
+                                playerHand.innerHTML = '';
+                                
+                                // Make sure the player has cards in their hand
+                                if (game.players[i] && game.players[i].hand) {
+                                    console.log(`Player ${i+1} has ${game.players[i].hand.length} cards`);
+                                    
+                                    // Display player's hand
+                                    game.players[i].hand.forEach((card, index) => {
+                                        const cardElement = createCardElement(card, index, 'hand', i);
+                                        playerHand.appendChild(cardElement);
+                                    });
+                                } else {
+                                    console.error(`Player ${i+1} has no hand property or it is undefined`);
+                                }
+                            }
                         } else {
-                            console.error(`Player ${i+1} has no hand property or it is undefined`);
+                            playerArea.style.display = 'none';
+                            playerArea.classList.remove('current-player');
                         }
-                        
-                        // Highlight current player's area
-                        const playerArea = document.getElementById(`player${i+1}-area`);
-                        if (playerArea) {
-                            playerArea.classList.toggle('current-player', game.currentPlayer === i);
-                        }
-                    } else {
-                        console.error(`Could not find element for player${i+1}-hand`);
                     }
                 }
                 
@@ -927,6 +937,10 @@
                     
                     // Add captured cards to player's pile
                     currentPlayerObj.captured.push(handCard, ...capturedCards);
+
+                    // Record this player as having made the most recent capture
+                    // Set lastCaptureTime to a timestamp to track the last player who captured
+                    currentPlayerObj.lastCaptureTime = Date.now();
                     
                     // Calculate sips based on number of cards captured (including the played card)
                     const sipsToAssign = capturedCards.length + 1;
@@ -936,7 +950,7 @@
                         currentPlayerObj.scopa++;
                         
                         // Show player selection for assigning sips
-                        showPlayerSelectForScopaRewards(sipsToAssign, `Ho scopato! ${getPlayerName(game.currentPlayer)} captured all cards from the table! Choose a player to take a halve bak and ${sipsToAssign} sips.`);
+                        showPlayerSelectForScopaRewards(sipsToAssign, `Ho scopato! ${getPlayerName(game.currentPlayer)} captured all cards from the table! First, choose a player to take ${sipsToAssign} sips and then choose a player to trek a halve bak.`);
                     } else {
                         // Show player selection for assigning sips
                         showPlayerSelectForSips(sipsToAssign, `${getPlayerName(game.currentPlayer)} captured ${capturedCards.length} cards. Choose a player to take ${sipsToAssign} sips.`);
@@ -1044,7 +1058,6 @@
                     <div style="margin-bottom: 20px;">
                         <p>Select a player to take a halve bak:</p>
                         <div id="halve-bak-buttons" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px;">
-                            <button id="skip-halve-bak" style="background-color: #cccccc; color: #333333;">Skip Halve Bak</button>
                             <!-- Player buttons will be added here -->
                         </div>
                     </div>
@@ -1117,14 +1130,14 @@
                     halveBakButtons.appendChild(button);
                 }
                 
-                // Add skip button functionality
-                document.getElementById('skip-halve-bak').addEventListener('click', function() {
-                    // Remove the overlay and continue without assigning halve bak
-                    document.body.removeChild(overlay);
+                // // Add skip button functionality
+                // document.getElementById('skip-halve-bak').addEventListener('click', function() {
+                //     // Remove the overlay and continue without assigning halve bak
+                //     document.body.removeChild(overlay);
                     
-                    // Continue to next player
-                    continueToNextPlayer();
-                });
+                //     // Continue to next player
+                //     continueToNextPlayer();
+                // });
             }
 
             // Continue to next player after handling sips assignment
@@ -1149,17 +1162,51 @@
                     } else {
                         // Last round - capture any remaining table cards
                         if (game.table.length > 0) {
-                            const lastPlayer = game.currentPlayer;
-                            game.players[lastPlayer].captured.push(...game.table);
+                            // Give remaining cards to the last player who made a capture
+                            let lastCapturePlayer = -1;
+                            let maxCaptureTime = -1;
+
+                            // Find the player who made the last capture
+                            for (let i = 0; i < game.playerCount; i++) {
+                                // We'll assume each player has a lastCaptureTime property
+                                // If not set yet, initialize it
+                                if (!game.players[i].hasOwnProperty('lastCaptureTime')) {
+                                    game.players[i].lastCaptureTime = -1;
+                                }
+                                
+                                if (game.players[i].lastCaptureTime > maxCaptureTime) {
+                                    maxCaptureTime = game.players[i].lastCaptureTime;
+                                    lastCapturePlayer = i;
+                                }
+                            }
                             
-                            // For remaining cards at game end, let player choose who gets sips
-                            const remainingCardCount = game.table.length;
-                            showPlayerSelectForSips(remainingCardCount, `${getPlayerName(lastPlayer)} gets the remaining ${remainingCardCount} table cards. Choose a player to take ${remainingCardCount} sips.`);
-                            game.table = [];
-                            
-                            // Game will end after player selection
-                            game.gameEnded = true;
-                            return;
+                            // If someone made a capture, give them the remaining cards
+                            if (lastCapturePlayer >= 0) {
+                                const remainingCardCount = game.table.length;
+                                game.players[lastCapturePlayer].captured.push(...game.table);
+                                
+                                // For remaining cards at game end, let player choose who gets sips
+                                showPlayerSelectForSips(remainingCardCount, 
+                                    `${getPlayerName(lastCapturePlayer)} gets the remaining ${remainingCardCount} table cards as they made the last capture. Choose a player to take ${remainingCardCount} sips.`);
+                                game.table = [];
+                                
+                                // Game will end after player selection
+                                game.gameEnded = true;
+                                return;
+                            } else {
+                                // If no one made a capture (unusual but possible), give to current player
+                                game.players[game.currentPlayer].captured.push(...game.table);
+                                
+                                // For remaining cards at game end, let player choose who gets sips
+                                const remainingCardCount = game.table.length;
+                                showPlayerSelectForSips(remainingCardCount, 
+                                    `${getPlayerName(game.currentPlayer)} gets the remaining ${remainingCardCount} table cards. Choose a player to take ${remainingCardCount} sips.`);
+                                game.table = [];
+                                
+                                // Game will end after player selection
+                                game.gameEnded = true;
+                                return;
+                            }
                         }
                         
                         // Game ends
@@ -1289,8 +1336,22 @@
             function setCurrentPlayer(playerIndex) {
                 game.currentPlayer = playerIndex;
                 statusMessage.textContent = `${getPlayerName(playerIndex)}'s turn. Select a card to play.`;
+                
+                // Update player areas visibility
+                for (let i = 0; i < game.playerCount; i++) {
+                    const playerArea = document.getElementById(`player${i+1}-area`);
+                    if (playerArea) {
+                        if (i === playerIndex) {
+                            playerArea.style.display = 'block';
+                            playerArea.classList.add('current-player');
+                        } else {
+                            playerArea.style.display = 'none';
+                            playerArea.classList.remove('current-player');
+                        }
+                    }
+                }
             }
-            
+
             // Get player name
             function getPlayerName(playerIndex) {
                 return game.players[playerIndex].name || `Player ${playerIndex + 1}`;

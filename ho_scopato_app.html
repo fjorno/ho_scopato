@@ -764,6 +764,7 @@
         <div class="controls">
             <!-- <button id="new-game-btn">New Game</button> -->
             <button id="end-turn-btn" disabled>End Turn</button>
+            <button id="toggle-scores-btn">Hide Scores</button>
             <!-- <button id="rules-btn">Show Rules</button> -->
         </div>
 
@@ -816,6 +817,7 @@
             const newGameBtn = document.getElementById('new-game-btn');
             const endTurnBtn = document.getElementById('end-turn-btn');
             const rulesBtn = document.getElementById('rules-btn');
+            const scoresBtn = document.getElementById('toggle-scores-btn');
             const statusMessage = document.getElementById('status-message');
             const rulesSection = document.getElementById('rules-section');
             const tableCards = document.getElementById('table-cards');
@@ -1098,6 +1100,8 @@
                     }
                 }
 
+                checkTableKings();
+
                 // Deal cards to players based on player count
                 if (game.playerCount < 5) {
                     for (let i = 0; i < game.playerCount; i++) {
@@ -1118,6 +1122,32 @@
                 }
                 
                 console.log("Cards dealt. Table:", game.table, "Players:", game.players);
+            }
+
+            function checkTableKings() {
+                // Count kings on the table (value 10 represents kings)
+                let kingCount = game.table.filter(card => card.value === 10).length;
+                
+                // If there are 2 or more kings, reshuffle and try again
+                if (kingCount >= 2) {
+                    console.log("Found " + kingCount + " kings on table. Reshuffling...");
+                    // Put table cards back in the deck
+                    game.deck.push(...game.table);
+                    // Clear the table
+                    game.table = [];
+                    // Reshuffle the deck
+                    shuffleDeck();
+                    // Deal new table cards
+                    const tableCardCount = game.playerCount === 5 ? 5 : 4;
+                    for (let i = 0; i < tableCardCount; i++) {
+                        if (game.deck.length > 0) {
+                            game.table.push(game.deck.pop());
+                        }
+                    }
+                    // Check again (recursive) 
+                    return checkTableKings();
+                }
+                return true;
             }
 
             // Deal new hands when needed
@@ -2179,6 +2209,20 @@
                 endTurnBtn.disabled = true;
             }
 
+            // Toggle the visibility of the scores
+            function toggleScoresVisibility() {
+                const scoreContainer = document.getElementById('score-container');
+                if (scoreContainer) {
+                    if (scoreContainer.style.display === 'none') {
+                        scoreContainer.style.display = 'flex';
+                        document.getElementById('toggle-scores-btn').textContent = 'Hide Scores';
+                    } else {
+                        scoreContainer.style.display = 'none';
+                        document.getElementById('toggle-scores-btn').textContent = 'Show Scores';
+                    }
+                }
+            }
+
             function debugGameState() {
                 console.log("Current game state:");
                 console.log("Players:", JSON.parse(JSON.stringify(game.players)));
@@ -2232,6 +2276,8 @@
                     rulesBtn.textContent = 'Show Rules';
                 }
             });
+
+            scoresBtn.addEventListener('click', toggleScoresVisibility);
             
             // Initialize the game setup
             initialize();

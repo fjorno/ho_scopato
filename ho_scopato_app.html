@@ -468,7 +468,6 @@
                 currentPlayer: 0,
                 selectedHandCard: null,
                 selectedTableCards: [],
-                scores: [],
                 gameEnded: false
             };
             
@@ -556,7 +555,6 @@
 
             function setupPlayers() {
                 game.players = [];
-                game.scores = [];
                 
                 for (let i = 0; i < game.playerCount; i++) {
                     // Get the player name from input field, or use default if empty
@@ -573,7 +571,6 @@
                         halveBak: 0,
                         lastCaptureTime: -1
                     });
-                    game.scores.push(0);
                 }
             }
             
@@ -614,7 +611,7 @@
                     scoreBox.className = 'score-box';
                     
                     scoreBox.innerHTML = `
-                        <span>${getPlayerName(i)}: <span id="score-player${i+1}">0</span></span>
+                        <span>${getPlayerName(i)}</span>
                         <div class="captured-cards" id="captured-player${i+1}">Cards: 0 (<span class="scopa-indicator" id="scopa-player${i+1}">0</span> scopa)</div>
                         <div class="sips-indicator" id="sips-player${i+1}">Sips to take: 0</div>
                         <div class="halve-bak-indicator" id="halve-bak-player${i+1}">Halve bakken te trekken: 0</div>
@@ -1354,100 +1351,14 @@
                 endTurnBtn.disabled = true;
             }
             
-            // Calculate final scores
-            function calculateScores() {
-                // Reset scores
-                game.scores = new Array(game.playerCount).fill(0);
-                
-                // Add points for scopas
-                for (let i = 0; i < game.playerCount; i++) {
-                    game.scores[i] += game.players[i].scopa;
-                }
-                
-                // Points for most cards
-                const cardsCount = game.players.map(player => player.captured.length);
-                const maxCards = Math.max(...cardsCount);
-                for (let i = 0; i < game.playerCount; i++) {
-                    if (cardsCount[i] === maxCards) {
-                        game.scores[i] += 1;
-                    }
-                }
-                
-                // Points for most coins
-                const coinCards = game.players.map(player => countCardsBySuit(player.captured, 'coins'));
-                const maxCoins = Math.max(...coinCards);
-                for (let i = 0; i < game.playerCount; i++) {
-                    if (coinCards[i] === maxCoins) {
-                        game.scores[i] += 1;
-                    }
-                }
-                
-                // Point for the seven of coins
-                for (let i = 0; i < game.playerCount; i++) {
-                    if (hasSpecificCard(game.players[i].captured, 7, 'coins')) {
-                        game.scores[i] += 1;
-                    }
-                }
-                
-                // Points for "prime"
-                const primePoints = game.players.map(player => calculatePrimePoints(player.captured));
-                const maxPrime = Math.max(...primePoints);
-                for (let i = 0; i < game.playerCount; i++) {
-                    if (primePoints[i] === maxPrime) {
-                        game.scores[i] += 1;
-                    }
-                }
-            }
-            
-            // Helper functions for score calculation
-            function countCardsBySuit(cards, targetSuit) {
-                return cards.filter(card => card.suit === targetSuit).length;
-            }
-            
-            function hasSpecificCard(cards, value, suit) {
-                return cards.some(card => card.value === value && card.suit === suit);
-            }
-            
-            function calculatePrimePoints(cards) {
-                // Group cards by suit
-                const suits = {};
-                for (const card of cards) {
-                    if (!suits[card.suit]) {
-                        suits[card.suit] = [];
-                    }
-                    suits[card.suit].push(card.value);
-                }
-                
-                // Calculate prime points (best card in each suit)
-                let totalPoints = 0;
-                for (const suit in suits) {
-                    const bestCard = Math.max(...suits[suit]);
-                    // Convert card value to prime points
-                    switch (bestCard) {
-                        case 7: totalPoints += 21; break;
-                        case 6: totalPoints += 18; break;
-                        case 1: totalPoints += 16; break;
-                        case 5: totalPoints += 15; break;
-                        case 4: totalPoints += 14; break;
-                        case 3: totalPoints += 13; break;
-                        case 2: totalPoints += 12; break;
-                        default: totalPoints += 10; break;
-                    }
-                }
-                
-                return totalPoints;
-            }
-            
             // Update the score display
             function updateScoreDisplay() {
                 for (let i = 0; i < game.playerCount; i++) {
-                    const scoreElement = document.getElementById(`score-player${i+1}`);
                     const capturedElement = document.getElementById(`captured-player${i+1}`);
                     const scopaElement = document.getElementById(`scopa-player${i+1}`);
                     const sipsElement = document.getElementById(`sips-player${i+1}`);
                     const halveBakElement = document.getElementById(`halve-bak-player${i+1}`);
                     
-                    if (scoreElement) scoreElement.textContent = game.scores[i];
                     if (capturedElement) capturedElement.textContent = `Cards: ${game.players[i].captured.length}`;
                     if (scopaElement) scopaElement.textContent = game.players[i].scopa;
                     if (sipsElement) sipsElement.textContent = `Sips to take: ${game.players[i].sips}`;
@@ -1535,17 +1446,7 @@
 
             function endGame() {
                 game.gameEnded = true;
-                calculateScores();
                 updateScoreDisplay();
-                
-                // Find winner(s)
-                const maxScore = Math.max(...game.scores);
-                const winners = [];
-                for (let i = 0; i < game.playerCount; i++) {
-                    if (game.scores[i] === maxScore) {
-                        winners.push(i);
-                    }
-                }
                 
                 // Calculate additional sips based on captured cards (total captured / 2, rounded up)
                 for (let i = 0; i < game.playerCount; i++) {
@@ -1557,7 +1458,7 @@
                 }
                 
                 // If no sips to assign or after all sips are assigned, display final results
-                displayFinalResults(winners, maxScore);
+                displayFinalResults();
             }
 
             // New function to handle end-game sips assignment
@@ -1628,15 +1529,7 @@
                             const nextSipsCount = Math.ceil(game.players[nextPlayerToAssign].captured.length / 2);
                             showPlayerSelectForEndGameSips(nextPlayerToAssign, nextSipsCount);
                         } else {
-                            // Calculate winners again since we exited the endGame function early
-                            const maxScore = Math.max(...game.scores);
-                            const winners = [];
-                            for (let i = 0; i < game.playerCount; i++) {
-                                if (game.scores[i] === maxScore) {
-                                    winners.push(i);
-                                }
-                            }
-                            displayFinalResults(winners, maxScore);
+                            displayFinalResults();
                         }
                     });
                     
@@ -1645,15 +1538,7 @@
             }
 
             // New function to display final results after all sips are assigned
-            function displayFinalResults(winners, maxScore) {
-                let winnerMessage = '';
-                if (winners.length === 1) {
-                    winnerMessage = `${getPlayerName(winners[0])} wins with ${maxScore} points!`;
-                } else {
-                    const winnerNames = winners.map(w => getPlayerName(w)).join(' and ');
-                    winnerMessage = `It's a tie! ${winnerNames} win with ${maxScore} points each!`;
-                }
-                
+            function displayFinalResults() {                
                 // Show final sips distribution
                 let sipsMessage = '<br>Final sips to take: ';
                 let hasSips = false;
@@ -1689,7 +1574,7 @@
                 // Create and display game over message
                 const gameOverElement = document.createElement('div');
                 gameOverElement.className = 'game-over';
-                gameOverElement.innerHTML = winnerMessage + sipsMessage;
+                gameOverElement.innerHTML = sipsMessage;
                 
                 // Remove any existing game-over element
                 const existingGameOver = document.querySelector('.game-over');
@@ -1724,7 +1609,6 @@
                 for (let i = 0; i < game.playerCount; i++) {
                     game.players[i].captured = [];
                     game.players[i].scopa = 0;
-                    game.scores[i] = 0;
                 }
                 
                 startGame();

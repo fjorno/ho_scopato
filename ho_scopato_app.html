@@ -12,22 +12,44 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #2e7d32;
-            color: white;
             margin: 0;
-            padding: 20px;
-            text-align: center;
-            /* overscroll-behavior-y: contain; */
-            /* overflow-y: hidden; */
+            padding: 0;
+            min-height: 100vh;
+            color: white;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 600% 600%;
+            animation: gradientBG 20s ease infinite;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Add a subtle pattern overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M10,10 L20,20 M30,0 L40,10 M0,30 L10,40 M40,40 L50,50" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></svg>');
+            pointer-events: none;
+            z-index: -1;
         }
 
         .game-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            margin: 20px auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         /* Toggle Menu Styles */
@@ -39,42 +61,61 @@
         }
 
         .menu-toggle {
-            background: rgba(0, 0, 0, 0.7);
-            border: none;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
-            width: 40px;
-            height: 40px;
-            border-radius: 5px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .menu-toggle:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.05);
         }
 
         .hamburger {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            width: 25px;
-            height: 20px;
+            width: 20px;
+            height: 16px;
         }
 
         .hamburger span {
             display: block;
-            height: 3px;
+            height: 2px;
             width: 100%;
             background-color: #ffd700;
             border-radius: 3px;
+            transition: all 0.3s;
+        }
+
+        .menu-toggle:hover .hamburger span {
+            background-color: #ffe866;
         }
 
         .menu {
             position: absolute;
-            top: 50px;
+            top: 55px;
             left: 0;
-            background-color: rgba(0, 0, 0, 0.8);
-            border-radius: 5px;
-            padding: 10px;
-            width: 150px;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 15px;
+            width: 180px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(-10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
         }
 
         .menu ul {
@@ -94,34 +135,61 @@
         .menu ul li button {
             width: 100%;
             text-align: left;
-            background-color: transparent;
+            background: transparent;
             color: #ffd700;
-            padding: 8px 10px;
-            transition: background-color 0.3s;
+            padding: 10px 15px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            box-shadow: none;
+            border: 1px solid rgba(255, 215, 0, 0.2);
         }
 
         .menu ul li button:hover {
             background-color: rgba(255, 215, 0, 0.2);
             transform: none;
+            box-shadow: none;
         }
 
         h1 {
             color: #ffd700;
             margin-bottom: 30px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            font-size: 2.2em;
+            position: relative;
+            padding-bottom: 15px;
+            text-align: center;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ffd700, transparent);
         }
 
         .player-selection {
-            margin: 20px 0;
-            padding: 15px;
+            margin: 25px 0;
+            padding: 20px;
             background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .player-selection select {
-            padding: 8px;
+            padding: 10px 15px;
             margin: 0 10px;
-            border-radius: 5px;
-            background-color: #fff;
+            border-radius: 6px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-size: 1em;
+            color: #333;
+            outline: none;
         }
 
         .controls {
@@ -132,34 +200,96 @@
         }
 
         button {
-            background-color: #ffd700;
-            color: #2e7d32;
+            background: linear-gradient(to bottom, #ffd700, #e5b800);
+            color: #1a2a6c;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 25px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         button:hover {
-            background-color: #ffeb3b;
-            transform: translateY(-2px);
+            background: linear-gradient(to bottom, #ffe03d, #ffd700);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
         }
 
         button:disabled {
-            background-color: #cccccc;
+            background: linear-gradient(to bottom, #cccccc, #bbbbbb);
             color: #666666;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
+        /* Player's hand styling to look like cards are being held */
         .player-area {
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 15px;
-            margin: 15px 0;
-            text-align: center;
+            position: relative;
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 30px 15px 15px;
+            margin: 35px 0 25px;
+        }
+
+        .player-area h2 {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffd700;
+            color: #2e7d32;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            z-index: 2;
+        }
+
+        /* Card hand container perspective effect */
+        [id^="player"] .cards-container {
+            display: flex;
+            justify-content: center;
+            gap: 0px; /* Cards overlap */
+            perspective: 1000px;
+            padding-bottom: 30px;
+            min-height: 120px;
+        }
+
+        /* Hand cards styling */
+        [id^="player"] .card {
+            margin-right: -25px; /* Make cards overlap */
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            transform-origin: bottom center;
+            transform: translateY(20px) rotate(0deg);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Fan-out effect for cards in hand */
+        [id^="player"] .card:nth-child(1) { transform: translateY(20px) rotate(-15deg); }
+        [id^="player"] .card:nth-child(2) { transform: translateY(20px) rotate(-10deg); }
+        [id^="player"] .card:nth-child(3) { transform: translateY(20px) rotate(-5deg); }
+        [id^="player"] .card:nth-child(4) { transform: translateY(20px) rotate(0deg); }
+        [id^="player"] .card:nth-child(5) { transform: translateY(20px) rotate(5deg); }
+        [id^="player"] .card:nth-child(6) { transform: translateY(20px) rotate(10deg); }
+        [id^="player"] .card:nth-child(7) { transform: translateY(20px) rotate(15deg); }
+
+        /* Hand card hover effects */
+        [id^="player"] .card:hover, 
+        [id^="player"] .card.selected {
+            transform: translateY(-10px) rotate(0deg) !important;
+            z-index: 10;
+            margin-right: -15px;
+            box-shadow: 0 15px 20px rgba(0, 0, 0, 0.5);
         }
 
         .current-player {
@@ -178,7 +308,7 @@
             width: 80px;
             height: 120px;
             background-color: white;
-            border-radius: 5px;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -186,19 +316,34 @@
             color: black;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.3s, box-shadow 0.3s;
             position: relative;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             padding: 5px;
             overflow: hidden;
+            background-image: linear-gradient(to bottom right, #ffffff, #f0f0f0);
+            border: 1px solid #e0e0e0;
+        }
+
+        /* Add slight card texture */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="rgba(0,0,0,0.02)" stroke-width="0.5"/></svg>');
+            pointer-events: none;
         }
 
         .card.selectable:hover {
             transform: translateY(-10px);
         }
 
+        /* Enhance visual effects of selected card */
         .card.selected {
-            box-shadow: 0 0 0 3px #ffd700;
+            box-shadow: 0 0 0 3px #ffd700, 0 10px 20px rgba(0, 0, 0, 0.5) !important;
         }
 
         .card.cups { color: #d32f2f; }
@@ -330,35 +475,109 @@
             color: transparent;
         }
 
+        /* Table styling to look like a felt table */
         .board-area {
             margin: 20px 0;
-            padding: 20px;
-            background-color: rgba(0, 77, 38, 0.7);
-            border-radius: 8px;
+            padding: 30px;
+            background-color: #0d5c2d; /* Deeper green for table felt */
+            border-radius: 15px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Add felt texture to the table */
+        .board-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none"/><path d="M0,0 L10,10 M20,0 L30,10 M40,0 L50,10 M60,0 L70,10 M80,0 L90,10 M0,20 L10,30 M20,20 L30,30 M40,20 L50,30 M60,20 L70,30 M80,20 L90,30" stroke="rgba(0,0,0,0.05)" stroke-width="1"/></svg>');
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        /* Make table cards look like they're on the table */
+        #table-cards {
+            position: relative;
+            min-height: 150px;
+            z-index: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        #table-cards .card {
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.4);
+            transform: rotate(0deg);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        /* Randomly rotate table cards slightly for natural look */
+        #table-cards .card:nth-child(odd) {
+            transform: rotate(-2deg);
+        }
+
+        #table-cards .card:nth-child(even) {
+            transform: rotate(2deg);
+        }
+
+        #table-cards .card:nth-child(3n) {
+            transform: rotate(-1deg);
+        }
+
+        #table-cards .card:nth-child(3n+1) {
+            transform: rotate(1deg);
+        }
+
+        #table-cards .card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5);
+            z-index: 2;
         }
 
         .status-message {
-            margin: 15px 0;
-            font-size: 20px;
+            margin: 20px 0;
+            font-size: 18px;
             color: #ffd700;
             min-height: 30px;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .score-container {
             display: flex;
             justify-content: space-around;
-            margin-top: 20px;
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 10px;
-            border-radius: 5px;
+            margin: 20px 0;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 12px;
             flex-wrap: wrap;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .score-box {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
-            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px 20px;
+            border-radius: 8px;
             margin: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .score-box:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .captured-cards {
@@ -394,6 +613,25 @@
         }
 
         @media (max-width: 600px) {
+            .game-container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .menu-container {
+                top: 10px;
+                left: 10px;
+            }
+            
+            .menu-toggle {
+                width: 40px;
+                height: 40px;
+            }
+            
             .card {
                 width: 60px;
                 height: 90px;
@@ -420,6 +658,15 @@
             .card-face.king::before {
                 font-size: 22px;
             }
+
+            [id^="player"] .card {
+                margin-right: -20px;
+            }
+            
+            [id^="player"] .card:hover, 
+            [id^="player"] .card.selected {
+                margin-right: -10px;
+            }
             
             .controls {
                 flex-direction: column;
@@ -432,7 +679,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
+            background: linear-gradient(135deg, rgba(26, 42, 108, 0.95), rgba(178, 31, 31, 0.95));
             z-index: 1000;
             display: flex;
             flex-direction: column;
@@ -441,21 +688,37 @@
             color: #ffffff;
         }
 
+        /* Add this to the pass-device overlay */
+        #pass-device-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M10,10 L15,15 M25,25 L30,30 M40,40 L45,45 M60,60 L65,65 M75,75 L80,80 M90,90 L95,95" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></svg>');
+            opacity: 0.3;
+            z-index: -1;
+        }
+
         #start-turn-btn {
-            background-color: #ffd700;
-            color: #2e7d32;
+            background: linear-gradient(to bottom, #ffd700, #e5b800);
+            color: #1a2a6c;
             border: none;
             padding: 15px 30px;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 1.2em;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
         }
 
         #start-turn-btn:hover {
-            background-color: #ffeb3b;
-            transform: translateY(-2px);
+            background: linear-gradient(to bottom, #ffe03d, #ffd700);
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
     </style>
 </head>
@@ -559,7 +822,22 @@
 
             // Toggle menu functionality
             menuToggle.addEventListener('click', function() {
-                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                const menu = document.getElementById('menu');
+                if (menu.style.display === 'none' || !menu.style.display) {
+                    menu.style.display = 'block';
+                    setTimeout(() => {
+                        menu.style.visibility = 'visible';
+                        menu.style.opacity = '1';
+                        menu.style.transform = 'translateY(0)';
+                    }, 10);
+                } else {
+                    menu.style.opacity = '0';
+                    menu.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        menu.style.visibility = 'hidden';
+                        menu.style.display = 'none';
+                    }, 300);
+                }
             });
 
             // Home button functionality

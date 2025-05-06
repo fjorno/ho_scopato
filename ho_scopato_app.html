@@ -1525,8 +1525,6 @@
 
                             // Find the player who made the last capture
                             for (let i = 0; i < game.playerCount; i++) {
-                                // We'll assume each player has a lastCaptureTime property
-                                // If not set yet, initialize it
                                 if (!game.players[i].hasOwnProperty('lastCaptureTime')) {
                                     game.players[i].lastCaptureTime = -1;
                                 }
@@ -1542,31 +1540,33 @@
                                 const remainingCardCount = game.table.length;
                                 game.players[lastCapturePlayer].captured.push(...game.table);
                                 
-                                // For remaining cards at game end, let player choose who gets sips
-                                showPlayerSelectForSips(remainingCardCount, 
-                                    `${getPlayerName(lastCapturePlayer)} gets the remaining ${remainingCardCount} table cards as they made the last capture. Choose a player to take ${remainingCardCount} sips.`);
+                                // Clear the table
                                 game.table = [];
                                 
-                                // Game will end after player selection
+                                // End the game
                                 game.gameEnded = true;
+                                
+                                // Show overlay with message about remaining cards
+                                showRemainingCardsOverlay(lastCapturePlayer, remainingCardCount);
                                 return;
                             } else {
                                 // If no one made a capture (unusual but possible), give to current player
+                                const remainingCardCount = game.table.length;
                                 game.players[game.currentPlayer].captured.push(...game.table);
                                 
-                                // For remaining cards at game end, let player choose who gets sips
-                                const remainingCardCount = game.table.length;
-                                showPlayerSelectForSips(remainingCardCount, 
-                                    `${getPlayerName(game.currentPlayer)} gets the remaining ${remainingCardCount} table cards. Choose a player to take ${remainingCardCount} sips.`);
+                                // Clear the table
                                 game.table = [];
                                 
-                                // Game will end after player selection
+                                // End the game
                                 game.gameEnded = true;
+                                
+                                // Show overlay with message about remaining cards
+                                showRemainingCardsOverlay(game.currentPlayer, remainingCardCount);
                                 return;
                             }
                         }
                         
-                        // Game ends
+                        // Game ends without remaining cards
                         endGame();
                         return;
                     }
@@ -1637,12 +1637,21 @@
                 // Hide player selection
                 document.getElementById('player-selection').style.display = 'none';
                 
+                // Remove any existing game-over element and make sure it's completely gone
+                const existingGameOver = document.querySelector('.game-over');
+                if (existingGameOver) {
+                    existingGameOver.remove();
+                }
+                
                 // Reset game state
                 game.deck = [];
                 game.table = [];
                 game.selectedHandCard = null;
                 game.selectedTableCards = [];
                 game.gameEnded = false;
+                
+                // Reset status message
+                statusMessage.textContent = "";
                 
                 // Setup players array
                 setupPlayers();
@@ -1779,6 +1788,42 @@
                 }
             }
 
+            // Add this new function to show the remaining cards overlay
+            function showRemainingCardsOverlay(playerIndex, cardCount) {
+                // Create overlay for remaining cards message
+                const overlay = document.createElement('div');
+                overlay.id = 'remaining-cards-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                overlay.style.zIndex = '1000';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.color = '#ffffff';
+                
+                // Create content for the overlay
+                overlay.innerHTML = `
+                    <h2 style="color: #ffd700; margin-bottom: 20px;">End of Game</h2>
+                    <h3 style="font-size: 1.5em; margin-bottom: 30px;">${getPlayerName(playerIndex)} gets the remaining ${cardCount} table cards</h3>
+                    <p style="font-size: 1.2em; margin-bottom: 30px;">${playerIndex === game.currentPlayer ? '' : 'They made the last capture.'}</p>
+                    <button id="show-results-btn" style="background-color: #ffd700; color: #2e7d32; border: none; padding: 15px 30px; 
+                    border-radius: 8px; font-size: 1.2em; cursor: pointer; font-weight: bold;">Show Final Results</button>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                // Add event listener to the button
+                document.getElementById('show-results-btn').addEventListener('click', function() {
+                    document.body.removeChild(overlay);
+                    endGame();
+                });
+            }
+
             // New function to display final results after all sips are assigned
             function displayFinalResults() {                
                 // Show final sips distribution
@@ -1813,6 +1858,9 @@
                     sipsMessage += '<br>Halve bak te trekken: ' + halveBakMessage;
                 }
                 
+                // Add play again button
+                sipsMessage += '<br><br><button id="play-again-btn" style="background-color: #ffd700; color: #2e7d32; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px;">Play Again</button>';
+                
                 // Create and display game over message
                 const gameOverElement = document.createElement('div');
                 gameOverElement.className = 'game-over';
@@ -1826,7 +1874,29 @@
                 
                 document.querySelector('.game-container').appendChild(gameOverElement);
                 
-                // Change new game button text
+                // Add event listener to the new play again button
+                document.getElementById('play-again-btn').addEventListener('click', () => {
+                    // Keep track of player names and other persistent data
+                    const preservedPlayers = game.players.map(player => ({
+                        id: player.id,
+                        name: player.name
+                    }));
+                    
+                    game.gameEnded = false;
+                    
+                    // Reset player scores but keep names
+                    for (let i = 0; i < game.playerCount; i++) {
+                        game.players[i].captured = [];
+                        game.players[i].scopa = 0;
+                        game.players[i].sips = 0;
+                        game.players[i].halveBak = 0;
+                        game.players[i].lastCaptureTime = -1;
+                    }
+                    
+                    startGame();
+                });
+                
+                // Change new game button text and disable end turn
                 newGameBtn.textContent = "Play Again";
                 endTurnBtn.disabled = true;
             }
@@ -1847,6 +1917,12 @@
             
             // Event listeners
             newGameBtn.addEventListener('click', () => {
+                // Remove any existing game-over element
+                const existingGameOver = document.querySelector('.game-over');
+                if (existingGameOver) {
+                    existingGameOver.remove();
+                }
+                
                 // Keep track of player names and other persistent data
                 const preservedPlayers = game.players.map(player => ({
                     id: player.id,
